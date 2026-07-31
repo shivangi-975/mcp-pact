@@ -92,3 +92,27 @@ def test_type_compatibility_widening():
 
     assert is_type_compatible({"type": ["string", "null"]}, {"type": "string"})
     assert not is_type_compatible({"type": "integer"}, {"type": "string"})
+
+
+def test_load_consumer_contract_rejects_missing_identity(tmp_path):
+    path = tmp_path / "bad.yaml"
+    path.write_text("interactions: []\n")
+    with pytest.raises(ValueError, match="requires non-empty 'consumer' and 'provider'"):
+        load_consumer_contract(path)
+
+
+def test_load_consumer_contract_allows_empty_interactions(tmp_path):
+    path = tmp_path / "empty.yaml"
+    path.write_text("consumer: agent\nprovider: docs\ninteractions: []\n")
+    contract = load_consumer_contract(path)
+    assert contract.interactions == []
+    provider = load_provider_surface(EXAMPLES / "provider_v1.json")
+    result = verify_consumer_against_provider(contract, provider)
+    assert result.ok
+    assert result.checked_interactions == 0
+
+
+def test_load_provider_surface_missing_file(tmp_path):
+    missing = tmp_path / "nope.json"
+    with pytest.raises(FileNotFoundError, match="Provider surface not found"):
+        load_provider_surface(missing)

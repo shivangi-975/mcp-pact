@@ -80,19 +80,27 @@ class ConsumerContract:
 
 
 def load_consumer_contract(path: str | Path) -> ConsumerContract:
+    """Load a consumer contract from a YAML or JSON file."""
     path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(f"Consumer contract not found: {path}")
     raw = path.read_text()
     if path.suffix.lower() in {".yaml", ".yml"}:
         data = yaml.safe_load(raw)
     else:
-        data = json.loads(raw)
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Consumer contract {path} is not valid JSON: {exc}") from exc
     if not isinstance(data, dict):
-        raise TypeError("Consumer contract must be a mapping")
+        raise TypeError(f"Consumer contract {path} must be a mapping, got {type(data).__name__}")
     interactions = [
         Interaction.from_dict(i) for i in (data.get("interactions") or []) if isinstance(i, dict)
     ]
     if not data.get("consumer") or not data.get("provider"):
-        raise ValueError("Consumer contract requires 'consumer' and 'provider'")
+        raise ValueError(
+            f"Consumer contract {path} requires non-empty 'consumer' and 'provider' fields"
+        )
     return ConsumerContract(
         consumer=str(data["consumer"]),
         provider=str(data["provider"]),

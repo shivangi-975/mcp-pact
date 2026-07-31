@@ -84,12 +84,21 @@ def provider_surface_from_tools_list(
 
 
 def load_provider_surface(path: str | Path) -> ProviderSurface:
-    data = json.loads(Path(path).read_text())
+    """Load a provider surface from a JSON snapshot (dict or tools/list array)."""
+    path = Path(path)
+    if not path.is_file():
+        raise FileNotFoundError(f"Provider surface not found: {path}")
+    try:
+        data = json.loads(path.read_text())
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Provider surface {path} is not valid JSON: {exc}") from exc
     if "tools" not in data:
         # Allow raw tools/list array or {"tools": [...]}
         if isinstance(data, list):
             return provider_surface_from_tools_list(data)
-        raise ValueError("Provider surface must contain a 'tools' object or be a tools list")
+        raise ValueError(
+            f"Provider surface {path} must contain a 'tools' object or be a tools/list array"
+        )
 
     tools_node = data["tools"]
     if isinstance(tools_node, list):
@@ -108,4 +117,7 @@ def load_provider_surface(path: str | Path) -> ProviderSurface:
             tools=tools,
             metadata=data.get("metadata") or {},
         )
-    raise ValueError("Unsupported tools format in provider surface")
+    raise ValueError(
+        f"Unsupported tools format in provider surface {path}: "
+        f"expected object or list, got {type(tools_node).__name__}"
+    )

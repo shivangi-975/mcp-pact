@@ -1,0 +1,15 @@
+consumer: support-agent
+provider: docs-mcp
+version: "1"
+interactions:
+  - tool: search_docs
+    description: Agent searches docs before answering a ticket
+    arguments:
+      query: "refund policy"
+      limit: 5
+    required_arguments: [query]
+  - tool: get_doc
+    description: Agent opens a specific doc
+    arguments:
+      doc_id: "POL-12"
+    required_arguments: [doc_id]

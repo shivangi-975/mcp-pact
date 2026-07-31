@@ -1,0 +1,19 @@
+{
+  "server_name": "docs-mcp",
+  "tools": {
+    "search_docs": {
+      "name": "search_docs",
+      "description": "Search internal documentation (improved)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string" },
+          "limit": { "type": "integer" },
+          "space": { "type": "string" }
+        },
+        "required": ["query", "space"],
+        "additionalProperties": false
+      }
+    }
+  }
+}

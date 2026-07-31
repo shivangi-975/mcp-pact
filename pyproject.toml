@@ -1,0 +1,58 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcp-pact"
+version = "0.1.0"
+description = "Consumer-driven contract testing for MCP servers — Pact-style agent contracts, provider verification, schema fuzzing, and can-i-deploy checks"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "shivangi", email = "shivangi-975@users.noreply.github.com" }]
+keywords = [
+  "mcp",
+  "model-context-protocol",
+  "contract-testing",
+  "consumer-driven",
+  "pact",
+  "breaking-change",
+  "agents",
+  "ci",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Testing",
+  "Topic :: Software Development :: Quality Assurance",
+]
+dependencies = [
+  "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "ruff>=0.4"]
+
+[project.scripts]
+mcp-pact = "mcp_pact.cli:main"
+
+[project.entry-points.pytest11]
+mcp_pact = "mcp_pact.pytest_plugin"
+
+[project.urls]
+Homepage = "https://github.com/shivangi-975/mcp-pact"
+Repository = "https://github.com/shivangi-975/mcp-pact"
+Issues = "https://github.com/shivangi-975/mcp-pact/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcp_pact"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

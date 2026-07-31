@@ -68,33 +68,72 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="mcp-pact",
         description=(
-            "Consumer-driven contract testing for MCP servers "
-            "(verify / can-i-deploy / diff / fuzz)"
+            "Consumer-driven contract testing for MCP servers. "
+            "Verify agent contracts, gate releases with can-i-deploy, "
+            "diff provider surfaces, and generate schema fuzz cases."
         ),
+        epilog=(
+            "Exit codes: 0 = compatible / success; "
+            "1 = at least one consumer would break (verify, can-deploy, diff with contracts). "
+            "fuzz always returns 0 on successful generation."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument("--version", action="version", version=f"mcp-pact {__version__}")
     sub = p.add_subparsers(dest="command", required=True)
 
-    v = sub.add_parser("verify", help="Verify one consumer contract against a provider surface")
+    v = sub.add_parser(
+        "verify",
+        help="Verify one consumer contract against a provider surface",
+        description="Check a single agent contract against an MCP provider tools/list snapshot.",
+    )
     v.add_argument("--contract", required=True, help="Path to consumer contract YAML/JSON")
     v.add_argument("--provider", required=True, help="Path to provider surface JSON snapshot")
     v.set_defaults(func=cmd_verify)
 
-    c = sub.add_parser("can-deploy", help="Check whether provider satisfies all consumer contracts")
-    c.add_argument("--provider", required=True)
-    c.add_argument("--contracts", nargs="+", required=True, help="One or more consumer contracts")
+    c = sub.add_parser(
+        "can-deploy",
+        help="Check whether provider satisfies all consumer contracts",
+        description=(
+            "Release gate: verify the provider surface against every consumer contract. "
+            "Exits 0 only when all consumers remain compatible."
+        ),
+    )
+    c.add_argument("--provider", required=True, help="Path to provider surface JSON snapshot")
+    c.add_argument(
+        "--contracts",
+        nargs="+",
+        required=True,
+        help="One or more consumer contract paths (YAML/JSON)",
+    )
     c.set_defaults(func=cmd_can_deploy)
 
-    d = sub.add_parser("diff", help="Diff two provider surfaces; optionally show consumer impact")
-    d.add_argument("--old", required=True)
-    d.add_argument("--new", required=True)
-    d.add_argument("--contracts", nargs="*", default=[])
+    d = sub.add_parser(
+        "diff",
+        help="Diff two provider surfaces; optionally show consumer impact",
+        description=(
+            "Compare old vs new provider surfaces. With --contracts, also re-verify "
+            "each consumer against the new surface and exit 1 on impact."
+        ),
+    )
+    d.add_argument("--old", required=True, help="Previous provider surface JSON")
+    d.add_argument("--new", required=True, help="Candidate provider surface JSON")
+    d.add_argument(
+        "--contracts",
+        nargs="*",
+        default=[],
+        help="Optional consumer contracts for impact analysis",
+    )
     d.set_defaults(func=cmd_diff)
 
-    f = sub.add_parser("fuzz", help="Generate schema fuzz cases from a provider surface")
-    f.add_argument("--provider", required=True)
-    f.add_argument("--tool", default=None)
-    f.add_argument("--out", default=None)
+    f = sub.add_parser(
+        "fuzz",
+        help="Generate schema fuzz cases from a provider surface",
+        description="Derive deterministic accept/reject argument cases from tool input schemas.",
+    )
+    f.add_argument("--provider", required=True, help="Path to provider surface JSON snapshot")
+    f.add_argument("--tool", default=None, help="Limit generation to a single tool name")
+    f.add_argument("--out", default=None, help="Write JSON cases to this path (default: stdout)")
     f.set_defaults(func=cmd_fuzz)
 
     return p
